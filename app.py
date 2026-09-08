@@ -29,17 +29,10 @@ st.set_page_config(page_title="DocuChat", page_icon="📄", layout="wide")
 st.title("📄 DocuChat — Ask Questions About Your Documents")
 st.caption("A Retrieval-Augmented Generation (RAG) app built with LangChain, FAISS, and Claude")
 
-# ---------------- Sidebar: API key + file upload ----------------
+# ---------------- Sidebar: File upload ----------------
 with st.sidebar:
     st.header("Setup")
-
-    default_key = os.getenv("ANTHROPIC_API_KEY", "")
-    api_key = st.text_input(
-        "Anthropic API Key",
-        value=default_key,
-        type="password",
-        help="Get one at https://console.anthropic.com. Used only for this session, never stored.",
-    )
+    st.success("Running locally via Ollama (No API key needed)")
 
     st.divider()
 
@@ -106,20 +99,17 @@ else:
     query = st.chat_input("Ask a question about your documents...")
 
     if query:
-        if not api_key:
-            st.error("Please enter your Anthropic API key in the sidebar.")
-        else:
-            st.session_state.chat_history.append(("user", query, None))
-            with st.chat_message("user"):
-                st.markdown(query)
+        st.session_state.chat_history.append(("user", query, None))
+        with st.chat_message("user"):
+            st.markdown(query)
 
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    answer, sources = answer_question(st.session_state.vector_store, query, api_key)
-                    st.markdown(answer)
-                    with st.expander("View sources used"):
-                        for s in sources:
-                            st.markdown(f"**{s.metadata.get('source', 'unknown')}** (page {s.metadata.get('page', 'N/A')})")
-                            st.caption(s.page_content[:300] + "...")
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                answer, sources = answer_question(st.session_state.vector_store, query)
+                st.markdown(answer)
+                with st.expander("View sources used"):
+                    for s in sources:
+                        st.markdown(f"**{s.metadata.get('source', 'unknown')}** (page {s.metadata.get('page', 'N/A')})")
+                        st.caption(s.page_content[:300] + "...")
 
-            st.session_state.chat_history.append(("assistant", answer, sources))
+        st.session_state.chat_history.append(("assistant", answer, sources))
