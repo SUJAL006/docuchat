@@ -79,16 +79,14 @@ Question: {query}
 Answer:"""
 
 
-def generate_answer(query: str, chunks: List[Document], api_key: str) -> str:
-    """Call the Anthropic API to generate a grounded answer from retrieved chunks."""
-    client = Anthropic(api_key=api_key)
+from langchain_ollama import ChatOllama
+
+def generate_answer(query: str, chunks: List[Document], api_key: str = "") -> str:
+    """Generate grounded answer locally using Ollama."""
+    llm = ChatOllama(model="llama3.2", temperature=0)
     prompt = build_prompt(query, chunks)
-    response = client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.content[0].text
+    response = llm.invoke(prompt)
+    return response.content
 
 
 def answer_question(vector_store: FAISS, query: str, api_key: str) -> Tuple[str, List[Document]]:
