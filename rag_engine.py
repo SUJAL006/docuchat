@@ -16,23 +16,26 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.schema import Document
-from anthropic import Anthropic
+from langchain_core.documents import Document
+from langchain_ollama import ChatOllama
+
 
 # ---- Config ----
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"  # free, local, no API key
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 TOP_K = 4
-CLAUDE_MODEL = "claude-sonnet-4-6"
+OLLAMA_MODEL = "llama3.2"
 
 
 def load_document(file_path: str) -> List[Document]:
     """Load a single document (PDF or TXT) into LangChain Document objects."""
     if file_path.lower().endswith(".pdf"):
         loader = PyPDFLoader(file_path)
-    else:
+    elif file_path.lower().endswith(".txt"):
         loader = TextLoader(file_path, encoding="utf-8")
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
     return loader.load()
 
 
@@ -53,6 +56,8 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
 
 def build_vector_store(chunks: List[Document], embeddings: HuggingFaceEmbeddings) -> FAISS:
     """Build an in-memory FAISS vector store from document chunks."""
+    if not chunks:
+        raise ValueError("No document chunks were created.")
     return FAISS.from_documents(chunks, embeddings)
 
 
@@ -62,7 +67,7 @@ def retrieve_relevant_chunks(vector_store: FAISS, query: str, k: int = TOP_K) ->
 
 
 def build_prompt(query: str, chunks: List[Document]) -> str:
-    """Construct a grounded prompt that instructs Claude to answer only from context."""
+    """Construct a grounded prompt that instructs the LLM to use only context."""
     context = "\n\n---\n\n".join(
         f"[Source: {c.metadata.get('source', 'unknown')}, page {c.metadata.get('page', 'N/A')}]\n{c.page_content}"
         for c in chunks
@@ -79,10 +84,12 @@ Question: {query}
 Answer:"""
 
 
-from langchain_ollama import ChatOllama
 
 def generate_answer(query: str, chunks: List[Document], api_key: str = "") -> str:
-    """Generate grounded answer locally using Ollama."""
+    """Generate grounded answer locally using Ollama.
+       api_key is retained for backwards compatibility with the original app;
+    Ollama does not require an API key.
+    """
     llm = ChatOllama(model="llama3.2", temperature=0)
     prompt = build_prompt(query, chunks)
     response = llm.invoke(prompt)
