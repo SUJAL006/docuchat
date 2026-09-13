@@ -37,7 +37,7 @@ chunking, embedding, vector search, and grounded generation.
 | Orchestration     | LangChain                                         |
 | Embeddings        | sentence-transformers (`all-MiniLM-L6-v2`, local, free) |
 | Vector store      | FAISS                                             |
-| Generation (LLM)  | Anthropic Claude API                              |
+| Generation (LLM)  | Ollama (`llama3.2`)                              |
 | UI                | Streamlit                                         |
 | PDF parsing       | pypdf                                             |
 
@@ -63,15 +63,12 @@ generation step (Claude).
    pip install -r requirements.txt
    ```
 
-4. **Add your API key**
+4. **Install and start Ollama**
+   Install Ollama, then make sure the Ollama service is running and pull the model:
    ```bash
-   cp .env.example .env
+   ollama pull llama3.2
    ```
-   Then open `.env` and paste your key from
-   [console.anthropic.com](https://console.anthropic.com):
-   ```
-   ANTHROPIC_API_KEY=sk-ant-...
-   ```
+   The app uses Ollama locally, so no Anthropic API key is required.
 
 5. **Run the app**
    ```bash
@@ -91,7 +88,7 @@ generation step (Claude).
 3. **Embed** — Each chunk is converted into a vector using a local sentence-transformers model (no API cost).
 4. **Store** — Vectors are indexed in FAISS for fast similarity search.
 5. **Retrieve** — On each question, the query is embedded and the top-4 most similar chunks are pulled from the index.
-6. **Generate** — Claude receives the question + retrieved chunks and is explicitly instructed to answer only from that context, preventing hallucinated answers.
+6. **Generate** — Ollama receives the question + retrieved chunks and is explicitly instructed to answer only from that context, preventing hallucinated answers.
 7. **Cite** — The UI shows exactly which document and page each answer came from.
 
 ## Possible extensions
