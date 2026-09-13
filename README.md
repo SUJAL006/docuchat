@@ -48,7 +48,7 @@ generation step (Claude).
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/<your-username>/docuchat.git
+   git clone https://github.com/SUJAL006/docuchat.git
    cd docuchat
    ```
 
